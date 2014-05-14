@@ -1,0 +1,287 @@
+#include<math.h>
+#include<ctype.h>
+#include<stdlib.h>
+#include<fstream.h>
+#include<iostream.h>
+#include<conio.h>
+#include<stdio.h>
+#include<string.h>
+#include<process.h>
+#include<dos.h>
+enum tokentype{ MAIN=10,INT,CHAR,IF,ELSE,WHILE,FOR,leftparen=20,rightparen,leftbrace,rightbrace,leftsq,rightsq,comma,semicolon,assign,equal,notequal,lesseq,greeq,less,gre,plus,minus,mul,divide,percent,not,IDEN=50,NUM=51,eof=90,UNK=100};
+struct token
+{
+ char name[30];
+ tokentype t;
+ int lineno;
+};
+struct sym
+{
+ char name[30];
+ char type[10];
+
+};
+token ost[]={   {"main",MAIN},
+				{"int",INT},
+				{"char",CHAR},
+				{"for",FOR},
+				{"while",WHILE},
+				{"if",IF},
+				{"else",ELSE},
+				{"(",leftparen},
+				{")",rightparen},
+				{"{",leftbrace},
+				{"}",rightbrace},
+				{"[",leftsq},
+				{"]",rightsq},
+				{",",comma},
+				{";",semicolon},
+				{"=",assign},
+				{"!",not},
+				{"<",less},
+				{">",gre},
+				{"==",equal},
+				{"!=",notequal},
+				{"<=",lesseq},
+				{">=",greeq},
+				{"+",plus},
+				{"-",minus},
+				{"/",divide},
+				{"%",percent},
+				{"*",mul}
+			};
+token T[100];
+sym S[100];
+int z=0;
+int check(char n[10])
+{
+ for(int i=0;i<z;i++)
+  if(!strcmp(n,S[i].name))
+   return 1;
+ return 0;
+}
+char datatype[10]="undefined";
+void main()
+{
+ int x=0,i=0,flag=1,flag1=0,symflag=0,symflag2=0,line=1;
+ char file[20],ch;
+ ifstream fd;
+ clrscr();
+ cout<<"Enter a file name: ";
+ gets(file);
+ fd.open(file,ios::nocreate);
+ if(!fd)
+ {
+  cout<<"This file doesnt exist!\n";
+  getch();
+  exit(0);
+ }
+ else
+ {
+  fd.get(ch);
+  while(ch==' ')
+   fd.get(ch);
+  while(!fd.eof())
+  {
+   switch(ch)
+   {
+	case ' ': if(flag==-1)
+			  {
+			   T[x].lineno=line;
+			   T[x++].name[i++]='\0';
+			   flag=1;
+			  }
+			  i=0;
+			  fd.get(ch);
+			  while(ch==' ')
+			   fd.get(ch);
+			  break;
+	case '\n': if(flag==-1)
+			   {
+				T[x].lineno=line;
+				T[x++].name[i++]='\0';
+				flag=1;
+			   }
+			   fd.get(ch);
+			   while(ch==' ')
+				fd.get(ch);
+			   i=0;
+			   line++;
+			   break;
+	case '\0': if(flag==-1)
+			   {
+				T[x].lineno=line;
+				T[x++].name[i]='\0';
+				flag=1;
+			   }
+			   fd.get(ch);
+			   while(ch==' ')
+				fd.get(ch);
+			   i=0;
+			   break;
+	default: symflag=0;
+			 symflag2=0;
+			 if(flag==-1)
+			 {
+			  for(int j=7;j<28;j++)
+			  {
+			   if(ost[j].name[0]==ch)
+			   {
+				for(int p=7;p<28;p++)
+				{
+				 if(T[x].name[i-1]==ost[p].name[0])
+				 {
+				  symflag2=1;
+				  if(p>=15 && p<=18)
+				  {
+				   if(j==15)
+				   {
+					T[x].name[i++]=ch;
+					T[x].lineno=line;
+					T[x++].name[i]='\0';
+					i=0;flag=1;
+				   }
+				   else
+				   {
+					T[x].name[i]='\0';
+					T[x++].lineno=line;
+					i=0;flag=-1;
+					T[x].name[i++]=ch;
+				   }
+				  }
+				  else
+				  {
+				   T[x].lineno=line;
+				   T[x++].name[i]='\0';i=0;flag=-1;
+				   T[x].name[i++]=ch;
+				  }
+				  break;
+				 }
+				}
+				if(symflag2==0)
+				{
+				 T[x].name[i]='\0';
+				 T[x++].lineno=line;
+				 i=0;flag=-1;
+				 T[x].name[i++]=ch;
+				}
+				symflag=1;
+				break;
+			   }
+			  }
+			  if(symflag==0)
+			  {
+			   symflag2=0;
+			   for(int p=7;p<28;p++)
+			   {
+				if(ost[p].name[0]==T[x].name[i-1])
+				{
+				 T[x].name[i]='\0';
+				 T[x++].lineno=line;
+				 i=0;flag=-1;
+				 T[x].name[i++]=ch;
+				 symflag2=1;
+				}
+			   }
+			   if(symflag2==0)
+			   {
+				flag=-1;
+				T[x].name[i++]=ch;
+			   }
+			  }
+			 }
+			 else
+			 {
+			  flag=-1;
+			  T[x].name[i++]=ch;
+			 }
+			 fd.get(ch);
+   }
+  }
+  T[x].lineno=line;
+ }
+ int l=-1;
+ for(i=0;i<=x;i++)
+ {
+  int flag=0;
+  for(int j=0;j<28;j++)
+  {
+   if(!strcmpi(T[i].name,ost[j].name))
+   {
+	flag=1;
+	T[i].t=ost[j].t;
+	break;
+   }
+  }
+  if(j==1 || j==2)
+  {
+   l=T[i].lineno;
+   strcpy(datatype,T[i].name);
+  }
+  if(flag==0)
+  {
+   if(isdigit(T[i].name[0]))
+   {
+	flag1=0;
+	for(int j=1;j<strlen(T[i].name);j++)
+	{
+	 if(!isdigit(T[i].name[j]))
+	 {
+	  flag1=-1;
+	  break;
+	 }
+	}
+	if(flag1==0)
+	 T[i].t=NUM;
+	else
+	 T[i].t=UNK;
+   }
+   else
+   {
+	if(isalpha(T[i].name[0]))
+	{
+	 flag1=0;
+	 for(int j=1;j<strlen(T[i].name);j++)
+	 {
+	  if(!isalpha(T[i].name[j]) && !isdigit(T[i].name[j]) && T[i].name[j]!='_')
+	  {
+	   flag1=-1;
+	   break;
+	  }
+	 }
+	 if(flag1==0)
+	 {
+	  T[i].t=IDEN;
+	  if(!check(T[i].name))
+	  {
+	   strcpy(S[z].name,T[i].name);
+	   if(l==T[i].lineno)
+		strcpy(S[z++].type,datatype);
+	   else
+		strcpy(S[z++].type,"undefined");
+	  }
+	 }
+	 else
+	  T[i].t=UNK;
+	}
+   }
+  }
+ }
+ for(i=1;i<=line;i++)
+ {
+  cout<<"Line No. "<<i<<":-\n\n";
+  cout<<"\nToken Name\tToken Value\tLine No.\n";
+  for(int j=0;j<=x;j++)
+  {
+   if(i==T[j].lineno)
+	cout<<T[j].name<<"\t\t"<<T[j].t<<"\t\t"<<T[j].lineno<<"\n";
+  }
+  cout<<"\nPress Any Key To Continue...";
+  getch();
+  clrscr();
+ }
+ cout<<"Symbol Table :-\n\n";
+ for(i=0;i<z;i++)
+  cout<<S[i].name<<"\t"<<S[i].type<<"\n";
+ getch();
+}
